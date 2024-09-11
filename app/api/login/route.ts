@@ -1,17 +1,15 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+// app/api/login/route.ts
+
+import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
-  const { email, password } = req.body;
+export async function POST(request: Request) {
+  const { email, password } = await request.json();
 
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+    return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
   }
 
   try {
@@ -21,13 +19,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
     // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid password' });
+      return NextResponse.json({ message: 'Invalid password' }, { status: 401 });
     }
 
     // Generate JWT token
@@ -40,13 +38,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     // Return the JWT token as a response
-    return res.status(200).json({
+    return NextResponse.json({
       message: 'Login successful',
       token, // Send the JWT token back to the client
       user: { id: user.id, email: user.email, name: user.name }, // Optional: user details
-    });
+    }, { status: 200 });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Something went wrong' });
+    return NextResponse.json({ message: 'Something went wrong' }, { status: 500 });
   }
 }
