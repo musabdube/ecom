@@ -1,7 +1,6 @@
-// app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import prisma from '../../../../lib/prisma'; // Adjust path if necessary
+import prisma from '../../../../lib/prisma';
 import { compare } from 'bcryptjs';
 
 const authHandler = NextAuth({
@@ -13,20 +12,25 @@ const authHandler = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       authorize: async (credentials) => {
-        const user = await prisma.user.findUnique({
-          where: { email: credentials?.email || '' },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials?.email || '' },
+          });
 
-        if (!user) {
-          throw new Error('User not found');
+          if (!user) {
+            throw new Error('User not found');
+          }
+
+          const isPasswordValid = await compare(credentials?.password || '', user.password);
+          if (!isPasswordValid) {
+            throw new Error('Invalid password');
+          }
+
+          return { id: user.id.toString(), name: user.name, email: user.email };
+        } catch (error) {
+          console.error('Error in authorize function:', error);
+          throw error;
         }
-
-        const isPasswordValid = await compare(credentials?.password || '', user.password);
-        if (!isPasswordValid) {
-          throw new Error('Invalid password');
-        }
-
-        return { id: user.id.toString(), name: user.name, email: user.email };
       },
     }),
   ],
