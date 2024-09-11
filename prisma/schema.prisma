@@ -1,0 +1,79 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       Float
+  thumbnail   String
+  cartItems   CartItem[]
+  likedItems  LikedProduct[]
+  createdAt   DateTime @default(now())
+  
+  // Link to the user (admin) who uploaded this product
+  uploadedBy  User     @relation(fields: [uploadedById], references: [id])
+  uploadedById Int
+  
+  // For sales tracking
+  sales       Sale[]
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  password  String
+  name      String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  role      Role        @default(USER)
+  cartItems CartItem[]
+  likedItems LikedProduct[]
+
+  // Products uploaded by this user (admins)
+  uploadedProducts Product[]
+  
+  // Sales made by this user (admins)
+  sales         Sale[]
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model LikedProduct {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model Sale {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  
+  quantity  Int
+  saleDate  DateTime @default(now())
+
+  User User[]
+}
+
+enum Role {
+  USER       // Regular users
+  ADMIN      // Admin who can upload products
+  SUPER_ADMIN // Super admin with full access
+}
