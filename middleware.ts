@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt'; // Assuming you're using NextAuth.js or JWT-based auth
 
 // List of protected routes for Admin and Super Admin
 const adminPaths = ['/admin', '/admin/products'];
 const superAdminPaths = ['/admin/super'];
 
-export async function middleware(req) {
+export async function middleware(req: NextRequest) { // Use NextRequest type here
   const url = req.nextUrl.clone();
   const token = await getToken({ req, secret: process.env.JWT_SECRET });
 

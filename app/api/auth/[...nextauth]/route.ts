@@ -1,4 +1,3 @@
-// app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '../../../../lib/prisma'; // Adjust the path to your Prisma setup
@@ -15,7 +14,7 @@ const handler = NextAuth({
       authorize: async (credentials) => {
         // Check if the user exists in the database
         const user = await prisma.user.findUnique({
-          where: { email: credentials?.email },
+          where: { email: credentials?.email || '' },
         });
 
         if (!user) {
@@ -28,8 +27,12 @@ const handler = NextAuth({
           throw new Error('Invalid password');
         }
 
-        // Return user object on successful login
-        return { id: user.id, name: user.name, email: user.email };
+        // Return user object on successful login with `id` as a string
+        return {
+          id: user.id.toString(), // Convert `id` to string
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
   ],
@@ -42,7 +45,10 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      session.user.id = token.id;
+      // Ensure session.user is defined and type is correctly handled
+      if (session.user) {
+        session.user.id = token.id as string; // Ensure id is of type string
+      }
       return session;
     },
     async jwt({ token, user }) {

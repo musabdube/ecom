@@ -1,13 +1,13 @@
-// components/Cart.tsx
 'use client'
 import { useState, useEffect } from 'react';
 import { getCart } from '../utils/cart';
+import { CartItem } from '../types/CartItem'; // Adjust the import path as needed
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]); // Specify the type here
 
   useEffect(() => {
-    return setCartItems(getCart());
+    setCartItems(getCart());
   }, []);
 
   return (
